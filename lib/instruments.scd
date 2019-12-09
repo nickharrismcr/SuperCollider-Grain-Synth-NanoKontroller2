@@ -11,11 +11,12 @@
 	soloed:-1,
 	m_trace: { 
 		arg self,t;
-		//t.debug("Trace");
+		t.debug("Instruments Trace");
 	},
 	m_init: {
 		arg self,mappings,proto;
 
+		self.m_trace("init");
 		self.list.do {
 			arg inst;
 
@@ -29,6 +30,7 @@
 		self.max=0;
 		if ((self.mappings==nil), { self.mappings=mappings; });
 		if ((self.proto==nil), { self.proto=proto; });
+		self.m_trace("init done");
 	},
 	m_active: { 
 		arg self;
@@ -40,12 +42,16 @@
 	},
 	m_set_active: {
 		arg self,id;
+		self.m_trace("set active");
 		self.active=id;
 		self.list.at(self.active).active = true;
+		self.m_trace("set active done");
 	},
 	m_store_active_parameters: {
 		arg self;
+		self.m_trace("instruments store_active_parameters");
 		self.m_active().m_store_parameters();
+		self.m_trace("instruments store_active_parameters done");
 	},
 	//------------------------------------------------------------------------------------------------------------------------
 	// add a new instrument
@@ -73,7 +79,7 @@
 				new_inst.m_setcontrol(name,val);
 			});
 			NotificationCenter.notify(\instruments,\changed_inst,self.active);
-
+			self.m_trace("new_instrument done");
 		}.defer;
 	},
 	//------------------------------------------------------------------------------------------------------------------------
