@@ -221,7 +221,7 @@
 			|view|
 			if ((self.playing.not), {
 				FileDialog.new({ |paths|
-					NotificationCenter.notify(\gui,\toggle_play);
+					NotificationCenter.notify(\gui,\toggle_play,paths[0]);
 				},
 				nil,
 				0,
@@ -229,7 +229,7 @@
 				);
 				self.playing=true;
 			},{
-				NotificationCenter.notify(\gui,\toggle_play);
+				NotificationCenter.notify(\gui,\toggle_play,"");
 				self.playing=false;
 			});
 		};

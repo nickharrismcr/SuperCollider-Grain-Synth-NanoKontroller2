@@ -237,12 +237,16 @@ f_set_general_actions={
 		});
 	});
 	NotificationCenter.register(\gui,\toggle_play,this,{
-		f_toggle_play_from_disk.();
+		arg path;
+		f_trace.("gui toggle play event");
+		f_toggle_play_from_disk.(path);
 	});
 	NotificationCenter.register(\gui,\reset,this,{
+		f_trace.("gui reset event");
 		f_reset.();
 	});
-	NotificationCenter.register(\gui,\toggle_record,this,{
+	NotificationCenter.register( \gui,\toggle_record,this,{
+		f_trace.("gui toggle rec event");
 		f_toggle_record.();
 	});
 };
@@ -531,7 +535,6 @@ g_instrument_proto=(
 		if ((self.soundFile == nil), {
 			Error("Could not find % ".format(f)).throw;
 		});
-
 		self.buf1=Buffer.readChannel(s,self.soundFile.path,0,-1,[0]);
 		if (( self.soundFile.numChannels == 2 ), {
 			self.buf2=Buffer.readChannel(s,self.soundFile.path,0,-1,[1]);
@@ -643,8 +646,8 @@ f_toggle_play_from_disk = {
 		g_disk.free;
 		g_playing=false;
 	},{
-		sf=SoundFile.new;
-		sf.openRead(path);
+		f_trace.("Open % for playing ".format(path));
+		sf=SoundFile.openRead(path);
 		if ((sf.numChannels == 2),{
 			f_trace.("Start playing");
 			g_diskbuf = Buffer.cueSoundFile(s,path,0,2);
