@@ -9,14 +9,16 @@
 	proto:nil,
 	tracefunc:nil,
 	soloed:-1,
+	mygui:nil,
 	m_trace: { 
 		arg self,t;
 		t.debug("Instruments Trace");
 	},
 	m_init: {
-		arg self,mappings,proto;
+		arg self,gui,mappings,proto;
 
 		self.m_trace("init");
+		self.mygui=gui;
 		self.list.do {
 			arg inst;
 
@@ -65,7 +67,7 @@
 			self.m_set_all_inactive();
 			self.max=self.max + 1;
 			new_inst = Event.new(40,self.proto);
-			new_inst.m_init();
+			new_inst.m_init(self.mygui,self.mappings);
 			new_inst.m_load_sound_file(soundfile);
 			new_inst.m_start_synths();
 			new_inst.m_set_controller_defaults();

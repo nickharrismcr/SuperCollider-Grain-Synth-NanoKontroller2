@@ -30,7 +30,7 @@ var g_gui;
 //-------------------------------------------------------------------------------------------------------------------------
 // constants
 //-------------------------------------------------------------------------------------------------------------------------
-g_default_soundfile="C:/Users/nick/Music/samples/piano.wav";
+g_default_soundfile="C:/Users/nick/Music/samples/whitenoise.wav";
 //-------------------------------------------------------------------------------------------------------------------------
 // return a function or event defined in an external file : crude import functionality!
 f_import= {
@@ -295,12 +295,14 @@ g_instrument_proto=(
 	pan_matched:false,
 	aux:0,
 	aux_matched:false,
+	mygui:nil,
 
 	m_init: {
 
-		arg self;
+		arg self,gui,mappings;
 
-		self.mappings=g_mappings;
+		self.mappings=mappings;
+		self.mygui=gui;
 		self.active=true;
 		self.id = g_instruments.max - 1;
 		self.params = Dictionary.new(80);
@@ -368,7 +370,7 @@ g_instrument_proto=(
 	m_set_controller_defaults: {
 
 		arg self;
-		g_mappings.m_get_all().keysValuesDo
+		self.mappings.m_get_all().keysValuesDo
 		{
 			|k,v|
 			var param;
@@ -399,7 +401,7 @@ g_instrument_proto=(
 			self.vol = val;
 			self.out.set(\vol,self.vol.linlin(0,127,0.0,1.0 ));
 		});
-		g_gui.m_update_mixer();
+		NotificationCenter.notify(\inst,\mixchange);
 	},
 	//------------------------------------------------------------------------------------------------------------------------
 	// set instrument pan 
@@ -417,7 +419,7 @@ g_instrument_proto=(
 			self.pan = val;
 			self.out.set(\pan,self.pan.linlin(0,127,-1.0,1.0 ));
 		});
-		g_gui.m_update_mixer();
+		NotificationCenter.notify(\inst,\mixchange);
 	},
 	//------------------------------------------------------------------------------------------------------------------------
 	// set instrument aux send
@@ -434,7 +436,7 @@ g_instrument_proto=(
 			self.aux = val;
 			self.out.set(\auxlev,self.aux.linlin(0,127,0.0,1.0 ));
 		});
-		g_gui.m_update_mixer();
+		NotificationCenter.notify(\inst,\mixchange);
 	},
 	//------------------------------------------------------------------------------------------------------------------------
 	// toggle instrument mute
@@ -470,7 +472,7 @@ g_instrument_proto=(
 
 		arg self;
 		self.vol_matched = false;
-		g_gui.m_update_mixer();
+		NotificationCenter.notify(\inst,\mixchange);
 	},
 	//------------------------------------------------------------------------------------------------------------------------
 	// mixer inst pan match status
@@ -478,7 +480,7 @@ g_instrument_proto=(
 
 		arg self;
 		self.pan_matched = false;
-		g_gui.m_update_mixer();
+		NotificationCenter.notify(\inst,\mixchange);
 	},
 	//------------------------------------------------------------------------------------------------------------------------
 	// mixer inst aux match status
@@ -486,7 +488,7 @@ g_instrument_proto=(
 
 		arg self;
 		self.aux_matched = false;
-		g_gui.m_update_mixer();
+		NotificationCenter.notify(\inst,\mixchange);
 	},
 	//------------------------------------------------------------------------------------------------------------------------
 	// store all mapping parameters 
@@ -549,12 +551,12 @@ g_instrument_proto=(
 		});
 
 		// TODO gui object should hold and manage sound file views
-		self.soundFileView = SoundFileView.new(g_gui.win, Rect(30, 50, 1300, 300))
+		self.soundFileView = SoundFileView.new(self.mygui.win, Rect(30, 50, 1300, 300))
 		.soundfile_(self.soundFile)
 		.read(0, self.soundFile.numFrames)
 		.gridColor_(Color.gray(0.3))
 		.gridOn_(false)
-		.setSelectionColor(0, g_gui.darkorange)
+		.setSelectionColor(0, self.mygui.darkorange)
 		.setSelectionColor(1, Color.yellow);
 		self.soundFileView.peakColor=Color.new255(200,100,0);
 		self.soundFileView.rmsColor=Color.new255(200,150,0);
@@ -603,7 +605,7 @@ g_instrument_proto=(
 		self.params.keysValuesDo {
 			arg cont,val;
 
-			mapping=g_mappings.m_get(cont);
+			mapping=self.mappings.m_get(cont);
 
 			mapping[\lastval]=val;
 			mapping.func(val,self);
@@ -708,14 +710,14 @@ g_mode = 0;
 
 f={
 	f_set_general_actions.();
+	g_gui=f_make_gui.();
 	g_mappings=f_make_mapping.();
 	g_mappings.m_init();
 	g_fx_mappings=f_make_fx_mapping.();
 	g_fx_mappings.m_init();
 	f_add_synthdefs.();
 	g_instruments=f_make_instruments.();
-	g_instruments.m_init(g_mappings,g_instrument_proto,f_trace);
-	g_gui=f_make_gui.();
+	g_instruments.m_init(g_gui,g_mappings,g_instrument_proto,f_trace);
 	g_gui.m_init(g_instruments,g_mappings,g_fx_mappings);
 	nil;
 };

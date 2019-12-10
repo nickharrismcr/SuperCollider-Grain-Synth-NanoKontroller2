@@ -345,6 +345,11 @@
 			arg inst;
 			self.m_update_gui_grain_window(inst);
 		});
+
+		NotificationCenter.register( \inst, \mixchange, self.win, {
+			self.m_update_mixer();
+		});
+
 		self.m_trace("init_gui done");
 		// prevent rescheduling
 		nil;
@@ -471,13 +476,13 @@
 		var pos,size;
 
 		{
-			self.m_trace("f_update_gui_grain_window");
+			self.m_trace("m_update_gui_grain_window");
 			pos=inst.soundFileView.numFrames * ( inst.sample_pos_fine + inst.sample_pos - ( inst.scan_width/2 ));
 			size=inst.soundFileView.numFrames * inst.scan_width;
 
 			if ( size < 5000,{ size =5000; });
 			inst.soundFileView.setSelection(0,[ pos, size ]);
-			self.m_trace("f_update_gui_grain_window done");
+			self.m_trace("m_update_gui_grain_window done");
 		}.defer;
 	},
 	//---------------------------------------------------------------------------------------------------------------------------------------------
