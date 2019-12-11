@@ -9,7 +9,6 @@
 		self.mappings=Dictionary.new(80);
 		self.groups=Dictionary.new(20);
 
-		"add mappings".postln;
 		self.mappings.put("KNOB_1",
 			(
 				group:1,

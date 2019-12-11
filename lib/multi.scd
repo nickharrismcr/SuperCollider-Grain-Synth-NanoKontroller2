@@ -4,15 +4,20 @@
 
 	list:nil,
 	active:nil,
-	max:nil,
+	inst_count:0,
 	mappings:nil,
 	proto:nil,
 	tracefunc:nil,
 	soloed:-1,
 	mygui:nil,
+	mixbus:nil,
+	fxbus:nil,
+	out:nil,
+	fx:nil,
+	trace:true,
 	m_trace: { 
 		arg self,t;
-		t.debug("Instruments Trace");
+		(self.trace).if { t.debug("Multi"); };
 	},
 	m_init: {
 		arg self,gui,mappings,proto;
@@ -29,13 +34,21 @@
 		self.list.free;
 		self.list=Array.new(8);
 		self.active=0;
-		self.max=0;
 		if ((self.mappings==nil), { self.mappings=mappings; });
 		if ((self.proto==nil), { self.proto=proto; });
+		self.inst_count=0;
 		self.m_trace("init done");
+	},
+	m_start_synths: {
+		arg self;
+		self.mixbus = Bus.audio(s,2);
+		self.fxbus = Bus.audio(s,2);
+		self.out=Synth(\out, [ \in:self.mixbus , \out: 0, \vol: 1.0 ]);
+		self.fx=Synth(\jpv, [ \in:self.fxbus, \out: self.mixbus ]);
 	},
 	m_active: { 
 		arg self;
+		self.m_trace("active %".format(self.active));
 		self.list.at(self.active);
 	},
 	m_get: { 
@@ -65,14 +78,14 @@
 		self.m_trace("new_instrument");
 		{
 			self.m_set_all_inactive();
-			self.max=self.max + 1;
-			new_inst = Event.new(40,self.proto);
-			new_inst.m_init(self.mygui,self.mappings);
+			self.inst_count=self.inst_count + 1;
+			new_inst = Event.new(60,self.proto);
+			new_inst.m_init(self.mygui,self.mappings,self);
 			new_inst.m_load_sound_file(soundfile);
 			new_inst.m_start_synths();
 			new_inst.m_set_controller_defaults();
 			self.list.add(new_inst);
-			self.active=self.max - 1;
+			self.active=self.inst_count - 1;
 			self.m_store_active_parameters();
 
 			// wire MIDI cc change to instrument control change
@@ -80,7 +93,7 @@
 				| name,val|
 				new_inst.m_setcontrol(name,val);
 			});
-			NotificationCenter.notify(\instruments,\changed_inst,self.active);
+			NotificationCenter.notify(\multi,\changed_inst,self.active);
 			self.m_trace("new_instrument done");
 		}.defer;
 	},
@@ -93,7 +106,7 @@
 
 		self.m_trace("new_instrument_clone");
 		{
-			if ( (self.max < 8), {
+			if ( (self.inst_count < 8), {
 				self.m_store_active_parameters();
 				params=self.m_active().params.deepCopy;
 				soundfile = self.m_active().soundfilename; 
@@ -112,14 +125,14 @@
 		arg self,inst_no;
 
 		self.m_trace("set instrument % ".format(inst_no));
-		if (( inst_no < self.max ), {
+		if (( inst_no < self.inst_count ), {
 
 			self.m_store_active_parameters();
 			self.m_set_all_inactive();
 			self.m_set_active(inst_no);
 			self.m_load_active_parameters();
 			self.m_update_gui_grain_display();
-			NotificationCenter.notify(\instruments,\changed_inst,self.active);
+			NotificationCenter.notify(\multi,\changed_inst,self.active);
 		});
 	},
 	m_prev_instrument: {
@@ -130,7 +143,7 @@
 	},
 	m_next_instrument: {
 		arg self;
-		if ((self.active < (self.max - 1)),{
+		if ((self.active < (self.inst_count - 1)),{
 			self.m_set_instrument(self.active + 1 );
 		});
 	},
@@ -292,7 +305,7 @@
 				self.m_new_instrument(filename);
 				inst=self.m_active();
 				inst.scenes=Array.fill(8*8,nil);
-				NotificationCenter.notify(\instruments,\changed_inst,self.active);
+				NotificationCenter.notify(\multi,\changed_inst,self.active);
 			});
 			if (( line[0]=="+"),{
 				cont=line[2];
@@ -318,7 +331,7 @@
 					inst.scenes[scene] = Dictionary.new();
 				});
 				inst.scenes[scene].put(cont,val);
-				NotificationCenter.notify(\instruments,\load_scene,inst);
+				NotificationCenter.notify(\multi,\load_scene,inst);
 			});
 		};
 		self.m_trace("load_patch done");

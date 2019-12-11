@@ -4,6 +4,11 @@
 	shift1:nil,
 	shift2:nil,
 	shift3:nil,
+	trace:true,
+	m_trace: {
+		arg self,s;
+		(self.trace).if { s.debug("Midi CC"); };
+	},
 	m_name: { |self,val|  self.names.at(val); },
 	m_update: {
 		arg self,p_val,p_num,p_chan,p_src;
@@ -25,5 +30,6 @@
 		if ((self.shift3 == true ), { name = "SHIFT_3+"++name; });
 
 		NotificationCenter.notify(\midi,\midi_in,Array.with(name,p_val));
+		self.m_trace("% : %".format(name,p_val));
 	};
 );

@@ -6,7 +6,6 @@
 
 		self.mappings=Dictionary.new(80);
 
-		"add fx mappings".postln;
 		self.mappings.put("KNOB_1",
 			(
 				group:1,

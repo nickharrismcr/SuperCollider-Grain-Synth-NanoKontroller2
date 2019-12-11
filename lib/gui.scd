@@ -1,5 +1,6 @@
 (
 	win:nil,
+	mode:0,
 	scene_items:nil,
 	inst_items:nil,
 	mixer_levels:nil,
@@ -11,7 +12,7 @@
 	mixerpanel:nil,
 	fxparams:nil,
 	fxpanel:nil,
-	instruments:nil,
+	multi:nil,
 	playing:false,
 	orange:Color.new255(255,105,0),
 	darkorange:Color.new255(170,50,0),
@@ -19,13 +20,14 @@
 	green:Color.new255(0,200,0),
 	khaki:Color.new255(50,50,0),
 	darkblue:Color.new255(0,0,150),
+	trace:true,
 	m_trace: {
 		arg self,txt;
-		txt.debug("GUI Trace");
+		(self.trace).if { txt.debug("GUI"); };
 	},
 	// construct the gui
 	m_init: {
-		arg self,instruments,mappings,fx_mappings;
+		arg self,multi,mappings,fx_mappings;
 
 		var l_scene_item_panel, l_bank_item_panel, l_inst_item_panel, l_cont_list;
 		var l_inst, l_scene_items, l_bank_items, l_inst_items;
@@ -38,7 +40,7 @@
 		self.win = Window.new("NanoKontrol 2 Granulator", Rect(50, 50, 1400, 800), false).front;
 		self.win.background = Color.grey(0.1, 0.9);
 
-		self.instruments=instruments;
+		self.multi=multi;
 		self.mixerchans=Array.new(8);
 		self.params=Dictionary.new();
 		self.fxparams=Dictionary.new();
@@ -239,7 +241,7 @@
 		l_randomize_button.states_([[ "Random", Color.cyan, Color.black ]]);
 		l_randomize_button.action = {
 			|view|
-			self.instruments.m_randomize_active();
+			self.multi.m_randomize_active();
 		};
 
 
@@ -249,7 +251,7 @@
 		l_save_patch_button.action = {
 			|view|
 			FileDialog.new({ |paths|
-				self.instruments.m_save_patch(paths[0]);
+				self.multi.m_save_patch(paths[0]);
 			},
 			nil,
 			0,
@@ -267,7 +269,7 @@
 		l_load_patch_button.action = {
 			|view|
 			FileDialog.new({ |paths|
-				self.instruments.m_load_patch(paths[0]);
+				self.multi.m_load_patch(paths[0]);
 			},
 			nil,
 			0,
@@ -283,7 +285,7 @@
 		l_load_file_button.action = {
 			|view|
 			FileDialog.new({ |paths|
-				l_inst=self.instruments.m_active();
+				l_inst=self.multi.m_active();
 				l_inst.m_replace_soundfile(paths[0]);
 			},
 			nil,
@@ -322,26 +324,26 @@
 			self.m_update_fx_gui(name,val,matched);
 		});
 
-		NotificationCenter.register( \instruments, \changed_inst, self.win, {
+		NotificationCenter.register( \multi, \changed_inst, self.win, {
 			arg id;
 
 			self.m_update_gui_inst_items();
-			self.m_update_gui_grain_window(self.instruments.m_active());
-			self.m_update_gui_scene_items(self.instruments.m_active());
+			self.m_update_gui_grain_window(self.multi.m_active());
+			self.m_update_gui_scene_items(self.multi.m_active());
 			mappings.m_clear_all_matches();
 		});
 
-		NotificationCenter.register( \instruments, \save_scene, self.win, {
+		NotificationCenter.register( \multi, \save_scene, self.win, {
 			arg inst;
 			self.m_update_gui_scene_items(inst);
 		});
 
-		NotificationCenter.register( \instruments, \load_scene, self.win, {
+		NotificationCenter.register( \multi, \load_scene, self.win, {
 			arg inst;
 			self.m_update_gui_scene_items(inst);
 		});
 
-		NotificationCenter.register( \instruments, \grain_window, self.win, {
+		NotificationCenter.register( \multi, \grain_window, self.win, {
 			arg inst;
 			self.m_update_gui_grain_window(inst);
 		});
@@ -353,6 +355,19 @@
 		self.m_trace("init_gui done");
 		// prevent rescheduling
 		nil;
+	},
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	// get the gui mode
+	m_get_mode: {
+		arg self;
+		self.mode;
+	},
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	//---------------------------------------------------------------------------------------------------------------------------------------------
+	// update the gui mode
+	m_set_mode: {
+		arg self,mode;
+		self.mode=mode;
 	},
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	// update the scene buttons ( active, in use, unused )
@@ -394,7 +409,7 @@
 		{
 			var inst;
 
-			inst=self.instruments.list[inst_id];
+			inst=self.multi.list[inst_id];
 			inst.soundFileView.setSelection(1, [ framepos.floor,(inst.soundFile.numFrames/1100) ]);
 		}.defer;
 	},
@@ -499,7 +514,7 @@
 
 				item.background_(self.darkorange);
 
-				inst=self.instruments.list.at(id);
+				inst=self.multi.list.at(id);
 
 				if (( inst != nil ),{
 
@@ -508,7 +523,7 @@
 						item.background_(Color.gray(0.25));
 					});
 
-					if (( self.instruments.active == id),{
+					if (( self.multi.active == id),{
 						item.background_( Color.new255(255,200,0) );
 						if ((inst[\mute] == 0.0 ), {
 							item.background_(Color.gray(0.5));
@@ -523,10 +538,10 @@
 	// show/hide mixer
 	m_show_mixer: {
 
-		arg self,mode;
-		self.m_trace("show mixer %".format(mode));
+		arg self;
+		self.m_trace("show mixer %".format(self.mode));
 		{
-			switch (mode,
+			switch (self.mode,
 				0, {
 					self.mixerpanel.visible_(false);
 					self.parampanel.visible_(true);
@@ -551,14 +566,14 @@
 
 		arg self;
 		{
-			self.m_trace("f_update_mixer");
+			self.m_trace("m_update_mixer");
 
 			self.mixer_levels.do {
 
 				arg item,id;
 				var inst,text,bar;
 
-				inst=self.instruments.list.at(id);
+				inst=self.multi.list.at(id);
 
 				if (( inst != nil ),{
 					# text,bar = item;		
@@ -575,7 +590,7 @@
 				arg item,id;
 				var inst,text,bar;
 
-				inst=self.instruments.list.at(id);
+				inst=self.multi.list.at(id);
 
 				if (( inst != nil ),{
 					# text,bar = item;
@@ -592,7 +607,7 @@
 				arg item,id;
 				var inst,text,bar;
 
-				inst=self.instruments.list.at(id);
+				inst=self.multi.list.at(id);
 
 				if (( inst != nil ),{
 					# text,bar = item;
@@ -604,23 +619,23 @@
 					});
 				});
 			};
-			self.m_trace("f_update_mixer done");
+			self.m_trace("m_update_mixer done");
 		}.defer;
 	},
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	// update fx panel sliders
-	m_update_mixer: {
+	m_update_fx: {
 
 		arg self;
 		{
-			self.m_trace("f_update_fx");
+			self.m_trace("m_update_fx");
 
 			self.mixer_levels.do {
 
 				arg item,id;
 				var inst,text,bar;
 
-				inst=self.instruments.list.at(id);
+				inst=self.multi.list.at(id);
 
 				if (( inst != nil ),{
 					# text,bar = item;		
@@ -637,7 +652,7 @@
 				arg item,id;
 				var inst,text,bar;
 
-				inst=self.instruments.list.at(id);
+				inst=self.multi.list.at(id);
 
 				if (( inst != nil ),{
 					# text,bar = item;
@@ -654,7 +669,7 @@
 				arg item,id;
 				var inst,text,bar;
 
-				inst=self.instruments.list.at(id);
+				inst=self.multi.list.at(id);
 
 				if (( inst != nil ),{
 					# text,bar = item;
@@ -666,7 +681,7 @@
 					});
 				});
 			};
-			self.m_trace("f_update_mixer done");
+			self.m_trace("m_update_fx done");
 		}.defer;
 	},
 	// prototype object for horizontal slider
