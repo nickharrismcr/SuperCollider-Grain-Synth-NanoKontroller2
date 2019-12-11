@@ -622,68 +622,6 @@
 			self.m_trace("m_update_mixer done");
 		}.defer;
 	},
-	//---------------------------------------------------------------------------------------------------------------------------------------------
-	// update fx panel sliders
-	m_update_fx: {
-
-		arg self;
-		{
-			self.m_trace("m_update_fx");
-
-			self.mixer_levels.do {
-
-				arg item,id;
-				var inst,text,bar;
-
-				inst=self.multi.list.at(id);
-
-				if (( inst != nil ),{
-					# text,bar = item;		
-					text.string_("%".format(inst.vol));
-					bar.updateit(inst.vol.linlin(0,127,0.0,1.0));
-					bar.setcolor(self.darkorange);
-					if (( inst.vol_matched == true ),{
-						bar.setcolor(self.orange);
-					});
-				});
-			};
-			self.mixer_pans.do {
-
-				arg item,id;
-				var inst,text,bar;
-
-				inst=self.multi.list.at(id);
-
-				if (( inst != nil ),{
-					# text,bar = item;
-					text.string_("%".format(inst.pan));
-					bar.updateit(inst.pan.linlin(0,127,0.0,1.0));
-					bar.setcolor(self.darkorange);
-					if (( inst.pan_matched == true ),{
-						bar.setcolor(self.orange);
-					});
-				});
-			};
-			self.mixer_auxs.do {
-
-				arg item,id;
-				var inst,text,bar;
-
-				inst=self.multi.list.at(id);
-
-				if (( inst != nil ),{
-					# text,bar = item;
-					text.string_("%".format(inst.aux));
-					bar.updateit(inst.aux.linlin(0,127,0.0,1.0));
-					bar.setcolor(self.darkorange);
-					if (( inst.aux_matched == true ),{
-						bar.setcolor(self.orange);
-					});
-				});
-			};
-			self.m_trace("m_update_fx done");
-		}.defer;
-	},
 	// prototype object for horizontal slider
 	m_hbar_proto: {
 		arg self;
