@@ -143,7 +143,7 @@
 		nr=Compander.ar(inp[1],inp[1],thresh:0.7,slopeBelow:1,slopeAbove:0.1,clampTime:0.01,relaxTime:0.1)*vol;
 		bal=Balance2.ar(nl,nr,pan);
 		Out.ar(out,bal);
-		Out.ar(aux,inp*auxlev);
+		Out.ar(aux,vol*inp*auxlev);
 	}).add;
 
 
