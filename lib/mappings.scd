@@ -163,7 +163,7 @@
 					|self,val,inst|
 					inst.sample_pos=val.linlin(0,127,0,1 );
 					inst.grain.set(\pos,inst.sample_pos+inst.sample_pos_fine);
-					NotificationCenter.notify(\instruments, \grain_window, inst);
+					NotificationCenter.notify(\multi, \grain_window, inst);
 				},
 
 				randomizable:true
@@ -181,7 +181,7 @@
 					|self,val,inst|
 					inst.sample_pos_fine=val.linlin(0,127,-0.02,0.02 );
 					inst.grain.set(\pos,inst.sample_pos+inst.sample_pos_fine);
-					NotificationCenter.notify(\instruments, \grain_window, inst);
+					NotificationCenter.notify(\multi, \grain_window, inst);
 				},
 				randomizable:true
 		));
@@ -543,7 +543,7 @@
 					|self,val,inst|
 					inst.scan_width=val.linlin(0,127,0,1 );
 					inst.grain.set(\scanwidth,inst.scan_width);
-					NotificationCenter.notify(\instruments, \grain_window, inst);
+					NotificationCenter.notify(\multi, \grain_window, inst);
 
 				},
 				randomizable:true
