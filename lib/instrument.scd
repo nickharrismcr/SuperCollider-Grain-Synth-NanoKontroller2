@@ -98,6 +98,25 @@
 			});
 		});
 	},
+	m_setcontrol_gui: {
+
+		arg self,name,val;
+		var mapping,param,group;
+
+		self.m_trace("setcontrol % % ".format(name,val));
+
+		if ((self.active == true && self.mygui.m_get_mode() == 0 ), {
+			mapping=self.mappings.m_get(name);
+			if (( mapping != nil ), {
+				param=mapping[\name];
+				mapping[\lastval]=val;
+				if (( mapping[\name] != nil ), {
+					mapping.func(val,self);
+				});
+				NotificationCenter.notify(\inst,\cc_change,Array.with(param,val,mapping[\matched]));
+			});
+		});
+	},
 	//------------------------------------------------------------------------------------------------------------------------
 	// start synths for an instrument
 
@@ -138,10 +157,10 @@
 	// set instrument volume 
 	m_setvol: {
 	
-		arg self,val;
+		arg self,val,forced;
 
 		self.m_trace("setvol % % ".format(self.id, val));
-		if (( self.vol_matched == false ),{
+		if (( (self.vol_matched == false) && (forced.not)),{
 			if (( self.vol == val ),{
 				self.vol_matched = true;
 			});

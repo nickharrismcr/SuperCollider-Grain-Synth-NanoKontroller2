@@ -7,6 +7,7 @@
 	mixer_pans:nil,
 	mixer_auxs:nil,
 	bank_items:nil,
+	mappings:nil,
 	params:nil,
 	parampanel:nil,
 	mixerpanel:nil,
@@ -34,7 +35,7 @@
 		var l_randomize_button, l_load_patch_button, l_save_patch_button;
 		var l_record_button, l_load_file_button, l_reset_button;
 		var l_play_from_disk_button;
-		var l_counter,l_panel2;
+		var l_counter,l_panel2,l_ccname;
 
 		self.m_trace("init_gui");
 		self.win = Window.new("NanoKontrol 2 Granulator", Rect(50, 50, 1400, 800), false).front;
@@ -44,6 +45,8 @@
 		self.mixerchans=Array.new(8);
 		self.params=Dictionary.new();
 		self.fxparams=Dictionary.new();
+		self.mappings=mappings;
+		
 
 		self.parampanel=CompositeView.new(self.win,Rect(30,400,1000,550));
 		self.parampanel.decorator=FlowLayout(self.parampanel.bounds);
@@ -82,7 +85,8 @@
 
 			if (( l_name != nil ), {
 				l_bar=self.m_hbar_proto().copy;
-				l_bar.addit(l_panel2,Rect(0,0,88,20),self.orange);
+				l_ccname=self.mappings.m_get_param(l_name);
+				l_bar.addit(l_panel2,Rect(0,0,88,20),l_ccname,self.orange);
 				l_bar.updateit(0.5); 
 			});
 			self.params.put(l_name,[ l_text,l_bar ]);
@@ -110,7 +114,7 @@
 			l_text.string_("64");
 			l_text.font = Font("Monaco",10);
 			l_item=self.m_hbar_proto().copy;
-			l_item.addit(l_panel2,Rect(0,0,88,20),self.orange);
+			l_item.addit(l_panel2,Rect(0,0,88,20),"",self.orange);
 			l_item.updateit(1.0); 
 			self.mixer_levels = self.mixer_levels.add([l_text,l_item]);
 
@@ -121,7 +125,7 @@
 			l_text=StaticText.new(l_panel2,20@20 ).background_(Color.gray(0.5)).stringColor_(Color.black).align_(\center);
 			l_text.string_("64");
 			l_item=self.m_hbar_proto().copy;
-			l_item.addit(l_panel2,Rect(0,0,88,20),self.orange);
+			l_item.addit(l_panel2,Rect(0,0,88,20),"",self.orange);
 			l_item.updateit(0.5); 
 			self.mixer_pans = self.mixer_pans.add([l_text,l_item]);
 
@@ -132,7 +136,7 @@
 			l_text=StaticText.new(l_panel2,20@20 ).background_(Color.gray(0.5)).stringColor_(Color.black).align_(\center);
 			l_text.string_("0");
 			l_item=self.m_hbar_proto().copy;
-			l_item.addit(l_panel2,Rect(0,0,88,20),self.orange);
+			l_item.addit(l_panel2,Rect(0,0,88,20),"",self.orange);
 			l_item.updateit(0.0); 
 			self.mixer_auxs = self.mixer_auxs.add([l_text,l_item]);
 		};
@@ -171,7 +175,7 @@
 
 			if (( l_name != nil ), {
 				l_bar=self.m_hbar_proto().copy;
-				l_bar.addit(l_panel2,Rect(0,0,88,20),self.orange);
+				l_bar.addit(l_panel2,Rect(0,0,88,20),l_name,self.orange);
 				l_bar.updateit(0.5); 
 			});
 			self.fxparams.put(l_name,[ l_text,l_bar ]);
@@ -330,7 +334,7 @@
 			self.m_update_gui_inst_items();
 			self.m_update_gui_grain_window(self.multi.m_active());
 			self.m_update_gui_scene_items(self.multi.m_active());
-			mappings.m_clear_all_matches();
+			self.mappings.m_clear_all_matches();
 		});
 
 		NotificationCenter.register( \multi, \save_scene, self.win, {
@@ -630,11 +634,13 @@
 			view:0,
 			val:0.5,
 			color:self.orange,
+			ccname:"",
 			addit: {
 
-				arg ev,parent,rect,color;
+				arg self,parent,rect,ccname,color;
 				var bar;
-
+			
+				self.ccname=ccname;
 				// (1) create a UserView
 				bar = UserView(parent,rect) ;
 				bar.background_(Color.black);
@@ -642,8 +648,8 @@
 				bar.drawFunc = {
 					// Draw the fill
 
-					Pen.fillColor = ev.color;
-					Pen.addRect(Rect(1,1, (bar.bounds.width*ev.val)-2,bar.bounds.height-2));
+					Pen.fillColor = self.color;
+					Pen.addRect(Rect(1,1, (bar.bounds.width*self.val)-2,bar.bounds.height-2));
 					Pen.fill;
 
 					// Draw the frame
@@ -653,20 +659,30 @@
 					Pen.stroke;
 				};
 				bar.refresh;
-				ev.view=bar;
+				self.view=bar;
+				self.view.mouseMoveAction= {
+					arg v,x,y;
+					var ccval,ccname;
+					if (( (x >= 0) && (x <= self.view.bounds.width) && (y >= 0) && (y <= self.view.bounds.height) ), {
+						ccval=x.linlin(0,self.view.bounds.width,0,127).floor;
+						NotificationCenter.notify(\gui,\control_change,Array.with(self.ccname,ccval));
+					});
+				};
+				
+				
 			},
 			updateit: {
-				arg ev,v;
+				arg self,v;
 				{
-					ev.val=v;
-					ev.view.refresh;
+					self.val=v;
+					self.view.refresh;
 				}.defer;
 			},
 			setcolor: {
-				arg ev,v;
+				arg self,v;
 				{
-					ev.color=v;
-					ev.view.refresh;
+					self.color=v;
+					self.view.refresh;
 				}.defer;
 			}
 		)

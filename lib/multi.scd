@@ -93,6 +93,10 @@
 				| name,val|
 				new_inst.m_setcontrol(name,val);
 			});
+			NotificationCenter.register( \gui, \control_change, new_inst, {
+				| name,val|
+				new_inst.m_setcontrol_gui(name,val);
+			});
 			NotificationCenter.notify(\multi,\changed_inst,self.active);
 			self.m_trace("new_instrument done");
 		}.defer;

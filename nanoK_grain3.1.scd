@@ -25,7 +25,7 @@ var g_mappings,g_fx_mappings;
 var f_make_mapping,f_make_fx_mapping;
 var f_toggle_record, f_reset, f_toggle_play_from_disk;
 var f_make_instrument,f_make_multi,f_make_gui;
-var g_instrument,g_multi,g_recording,g_default_soundfile;
+var g_instrument,g_recording,g_default_soundfile;
 var g_gui;
 
 //-------------------------------------------------------------------------------------------------------------------------
@@ -50,14 +50,14 @@ f_import= {
 //------------------------------------------------------------------------------------------------------------------------
 
 // add sythdefs to server
-f_add_synthdefs=f_import.("lib/add_synthdefs.scd"); 
-// object to for MIDI input  
+f_add_synthdefs=f_import.("lib/add_synthdefs.scd");
+// object to for MIDI input
 g_midi=f_import.("lib/midi_handler.scd");
 // define midi cc/synth param mappings
 f_make_mapping = f_import.("lib/mappings.scd");
 // define midi cc/fx param mappings
 f_make_fx_mapping = f_import.("lib/jpverb_mappings.scd");
-// instrument 
+// instrument
 f_make_instrument=f_import.("lib/instrument.scd").value;
 // collection of instruments
 f_make_multi=f_import.("lib/multi.scd").value;
@@ -110,14 +110,14 @@ f_set_general_actions={
 	NotificationCenter.register( \midi, \midi_in, this, {
 		arg name,val,num,inst;
 
-		// prev/next/new instrument 
-		if (( name == "PREV_MARK" && val == 127 ), { g_multi.m_prev_instrument(); });
-		if (( name == "NEXT_MARK" && val == 127 ), { g_multi.m_next_instrument(); });
-		if (( name == "SET_MARK"  && val == 127 ), { g_multi.m_new_instrument_clone(); });
+		// prev/next/new instrument
+		if (( name == "PREV_MARK" && val == 127 ), { ~multi.m_prev_instrument(); });
+		if (( name == "NEXT_MARK" && val == 127 ), { ~multi.m_next_instrument(); });
+		if (( name == "SET_MARK"  && val == 127 ), { ~multi.m_new_instrument_clone(); });
 
 		// cycle toggles synth/mixer mode
 		if (( name == "CYCLE" && val == 127 ), {
-			switch (g_gui.m_get_mode(), 
+			switch (g_gui.m_get_mode(),
 				0,{ g_gui.m_set_mode(1); },
 				1,{ g_gui.m_set_mode(2); },
 				2,{ g_gui.m_set_mode(0); });
@@ -128,91 +128,91 @@ f_set_general_actions={
 
 			// save scenes
 			if (( name.find( "SHIFT_1+R_BUTTON") != nil && val == 127 ), {
-				num=name.split($_)[3].asInteger;	
-				g_multi.m_active().m_save_scene(num-1);
+				num=name.split($_)[3].asInteger;
+				~multi.m_active().m_save_scene(num-1);
 			});
 
 			// load scenes
 			if (( name.beginsWith( "R_BUTTON")  && val == 127 ), {
-				num=name.split($_)[2].asInteger;	
-				g_multi.m_active().m_load_scene(num-1);
+				num=name.split($_)[2].asInteger;
+				~multi.m_active().m_load_scene(num-1);
 			});
 
 			// select active instrument
 			if (( name.beginsWith( "S_BUTTON")  && val == 127 ), {
-				num=name.split($_)[2].asInteger;	
-				g_multi.m_set_instrument(num-1);
+				num=name.split($_)[2].asInteger;
+				~multi.m_set_instrument(num-1);
 			});
 
 			// mute instrument
 			if (( name.beginsWith( "M_BUTTON")  && val == 127 ), {
-				num=name.split($_)[2].asInteger;	
-				inst=g_multi.m_get(num-1);
+				num=name.split($_)[2].asInteger;
+				inst=~multi.m_get(num-1);
 				if ((inst!=nil),{
 					inst.m_toggle_mute();
 				});
 			});
 			// solo instrument
 			if (( name.beginsWith( "SHIFT_1+M_BUTTON")  && val == 127 ), {
-				num=name.split($_)[3].asInteger;	
-				g_multi.m_toggle_solo(num-1);
+				num=name.split($_)[3].asInteger;
+				~multi.m_toggle_solo(num-1);
 			});
 			// unset mixer slider matched flag
 			if (( name.beginsWith("SLIDER" ) ), {
-				num=name.split($_)[1].asInteger;	
-				inst=g_multi.m_get(num-1);
+				num=name.split($_)[1].asInteger;
+				inst=~multi.m_get(num-1);
 				if ((inst!=nil),{
 					inst.m_unset_vol_match();
 				});
-			});	
+			});
 			// unset mixer knob matched flag
 			if (( name.beginsWith("KNOB" ) ), {
-				num=name.split($_)[1].asInteger;	
-				inst=g_multi.m_get(num-1);
+				num=name.split($_)[1].asInteger;
+				inst=~multi.m_get(num-1);
 				if ((inst!=nil),{
 					inst.m_unset_pan_match();
 					inst.m_unset_aux_match();
 				});
-			});	
+			});
 		});
 		// mixer mode
 		if (( g_gui.m_get_mode() == 1 ), {
 			// set a mixer channel volume
 			if (( name.beginsWith( "SLIDER_")), {
-				num=name.split($_)[1].asInteger;	
-				inst=g_multi.m_get(num-1);
+				num=name.split($_)[1].asInteger;
+				inst=~multi.m_get(num-1);
 				if ((inst!=nil),{
-					inst.m_setvol(val);
+					inst.m_setvol(val,false);
 				});
 			});
 			// set a mixer channel pan
 			if (( name.beginsWith( "KNOB_")), {
-				num=name.split($_)[1].asInteger;	
-				inst=g_multi.m_get(num-1);
+				num=name.split($_)[1].asInteger;
+				inst=~multi.m_get(num-1);
 				if ((inst!=nil),{
 					inst.m_setpan(val);
 				});
 			});
 			// set a mixer channel aux
 			if (( name.beginsWith( "SHIFT_1+KNOB_")), {
-				num=name.split($_)[2].asInteger;	
-				inst=g_multi.m_get(num-1);
+				num=name.split($_)[2].asInteger;
+				inst=~multi.m_get(num-1);
 				if ((inst!=nil),{
 					inst.m_setaux(val);
 				});
 			});
 			// mute instrument
 			if (( name.beginsWith( "M_BUTTON")  && val == 127 ), {
-				num=name.split($_)[2].asInteger;	
-				inst=g_multi.m_get(num-1);
+				num=name.split($_)[2].asInteger;
+				inst=~multi.m_get(num-1);
 				if ((inst!=nil),{
 					inst.m_toggle_mute();
 				});
 			});
 			// solo instrument
 			if (( name.beginsWith( "SHIFT_1+M_BUTTON")  && val == 127 ), {
-				num=name.split($_)[3].asInteger;	
-				g_multi.m_toggle_solo(num-1);
+				num=name.split($_)[3].asInteger;
+				~multi.m_toggle_solo(num-1);
 			});
 		});
 		// fx mode
@@ -230,7 +230,7 @@ f_set_general_actions={
 						if (( mapping[\name] == "disk play vol"),{
 							mapping.func(val,g_disk);
 						},{
-							mapping.func(val,g_multi.fx);
+							mapping.func(val,~multi.fx);
 						});
 					});
 				});
@@ -280,7 +280,7 @@ f_toggle_play_from_disk = {
 		if ((sf.numChannels == 2),{
 			f_trace.("Start playing");
 			g_diskbuf = Buffer.cueSoundFile(s,path,0,2);
-			g_disk=Synth(\disk, [ \out:g_multi.mixbus, \bufnum:g_diskbuf ]);
+			g_disk=Synth(\disk, [ \out:~multi.mixbus, \bufnum:g_diskbuf ]);
 		},{
 			"Must be a stereo soundfile".postln;
 		});
@@ -309,10 +309,10 @@ f_reset={
 
 	var inst;
 
-	g_multi.m_init(g_gui,g_mappings,g_instrument);
-	g_multi.m_new_instrument(g_default_soundfile);
+	~multi.m_init(g_gui,g_mappings,g_instrument);
+	~multi.m_new_instrument(g_default_soundfile);
 	g_mappings.m_clear_all_matches();
-	NotificationCenter.notify(\multi,\changed_inst,g_multi.active);
+	NotificationCenter.notify(\multi,\changed_inst,~multi.active);
 };
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -338,22 +338,22 @@ g_trace = true;
 f={
 	f_set_general_actions.();
 	g_gui=f_make_gui.();
-	g_multi=f_make_multi.();
+	~multi=f_make_multi.();
 	g_mappings=f_make_mapping.();
 	g_fx_mappings=f_make_fx_mapping.();
 	g_instrument=f_make_instrument.();
 
 	g_gui.trace=g_trace;
-	g_multi.trace=g_trace;
+	~multi.trace=g_trace;
 	g_instrument.trace=g_trace;
 	g_midi.trace=g_trace;
 
 	f_add_synthdefs.();
 	g_mappings.m_init();
 	g_fx_mappings.m_init();
-	g_instrument.m_init(g_gui,g_mappings,g_multi);
-	g_multi.m_init(g_gui,g_mappings,g_instrument,f_trace);
-	g_gui.m_init(g_multi,g_mappings,g_fx_mappings);
+	g_instrument.m_init(g_gui,g_mappings,~multi);
+	~multi.m_init(g_gui,g_mappings,g_instrument,f_trace);
+	g_gui.m_init(~multi,g_mappings,g_fx_mappings);
 	f_trace.("Init complete");
 	nil;
 };
@@ -363,9 +363,9 @@ AppClock.sched(1,f);
 	f_trace.("Starting...");
 	2.wait;
 	g_diskbuf = Buffer.alloc(s,2,2);
-	g_multi.m_start_synths();
+	~multi.m_start_synths();
 	g_playing=false;
-	g_multi.m_new_instrument(g_default_soundfile);
+	~multi.m_new_instrument(g_default_soundfile);
 }.fork;
 
 // handler to update GUI play cursor from position sent from grain Synth
@@ -376,4 +376,21 @@ o=OSCFunc( {
 	var framepos=msg[3];
 	g_gui.m_update_gui_play_pos(inst_id,framepos);
 
-},'/tr',s.addr)
+},'/tr',s.addr);
+
+// {
+// 	{
+// 		var instno,inst,val;
+// 		10.wait;
+// 		loop {
+// 			0.1.wait;
+// 			~multi.list.do {
+// 				arg inst;
+// 				val=127.rand;
+// 				inst.m_setvol(val,true);
+// 				"set % %".format(instno,val).postln;
+// 			};
+// 		};
+// 	}.fork;
+// 	nil;
+// }.defer;

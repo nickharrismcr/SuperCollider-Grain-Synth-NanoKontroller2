@@ -8,6 +8,7 @@
 
 		self.mappings=Dictionary.new(80);
 		self.groups=Dictionary.new(20);
+		self.params=Dictionary.new(80);
 
 		self.mappings.put("KNOB_1",
 			(
@@ -707,14 +708,18 @@
 		self.mappings.keysValuesDo {
 
 			arg k,v;
-			var group;
+			var group,param;
 
 			group = v[\group];
-
 			if ((self.groups.at(group) == nil ),{
 				self.groups.put(group,[ v ] );
 			},{
 				self.groups.at(group).add(v);
+			});
+
+			param= v[\name];
+			if ((param != nil),{
+				self.params.put(param, k);
 			});
 		};
 	},
@@ -736,5 +741,9 @@
 	m_get_group: {
 		arg self,key;
 		self.groups[key];
+	},
+	m_get_param: {
+		arg self,key;
+		self.params[key];
 	}
 );
