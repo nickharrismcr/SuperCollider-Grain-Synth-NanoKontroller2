@@ -215,6 +215,10 @@
 			var l_item;
 			l_item=StaticText.new(l_inst_item_panel,50@20).background_(self.orange).string_("inst %".format(i+1)).align_(\center);
 			l_item.font = Font("Monaco",10);
+			l_item.mouseDownAction={
+				arg view,x,y,modifiers,buttonNumber,clickCount;
+				NotificationCenter.notify(\gui,\inst_sel,i);
+			};
 		});
 
 		//update_gui_bank_items.(inst);

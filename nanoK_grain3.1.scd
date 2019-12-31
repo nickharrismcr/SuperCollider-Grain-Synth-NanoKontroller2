@@ -252,6 +252,14 @@ f_set_general_actions={
 		f_trace.("gui toggle rec event");
 		f_toggle_record.();
 	});
+	NotificationCenter.register( \gui,\inst_sel,this,{
+		arg instno;
+		f_trace.("gui inst sel event");
+		if ((~multi.inst_count == instno ),{
+			~multi.m_new_instrument_clone();
+		});
+		~multi.m_set_instrument(instno);
+	});
 };
 
 //------------------------------------------------------------------------------------------------------------------------
