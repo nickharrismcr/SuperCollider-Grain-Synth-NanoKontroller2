@@ -174,10 +174,10 @@
 	// set instrument pan 
 	m_setpan: {
 	
-		arg self,val;
+		arg self,val,forced;
 		
 		self.m_trace("setpan % % ".format(self.id, val));
-		if (( self.pan_matched == false ),{
+		if (( (self.pan_matched == false ) && (forced.not)),{
 			if (( self.pan == val ),{
 				self.pan_matched = true;
 			});
@@ -192,10 +192,10 @@
 	// set instrument aux send
 	m_setaux: {
 	
-		arg self,val;
+		arg self,val,forced;
 
 		self.m_trace("setaux % % ".format(self.id, val));
-		if (( self.aux_matched == false ),{
+		if (( (self.aux_matched == false ) && (forced.not)) ,{
 			if (( self.aux == val ),{
 				self.aux_matched = true;
 			});

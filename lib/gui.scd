@@ -9,6 +9,9 @@
 	bank_items:nil,
 	mappings:nil,
 	params:nil,
+	paramsel:nil,
+	mixersel:nil,
+	fxsel:nil,
 	parampanel:nil,
 	mixerpanel:nil,
 	fxparams:nil,
@@ -47,6 +50,29 @@
 		self.fxparams=Dictionary.new();
 		self.mappings=mappings;
 		
+		self.paramsel=StaticText.new(self.win,Rect(33,380,120,20)).background_(self.khaki).stringColor_(Color.black).align_(\center);
+		self.paramsel.string_("Instrument");
+		self.paramsel.font = Font("Monaco",10);
+		self.paramsel.mouseDownAction={
+			arg view,x,y,modifiers,buttonNumber,clickCount;
+			NotificationCenter.notify(\gui,\gui_sel,0);
+		};
+
+		self.mixersel=StaticText.new(self.win,Rect(158,380,120,20)).background_(self.darkblue).stringColor_(Color.black).align_(\center);
+		self.mixersel.string_("Mixer");
+		self.mixersel.font = Font("Monaco",10);
+		self.mixersel.mouseDownAction={
+			arg view,x,y,modifiers,buttonNumber,clickCount;
+			NotificationCenter.notify(\gui,\gui_sel,1);
+		};
+
+		self.fxsel=StaticText.new(self.win,Rect(282,380,120,20)).background_(self.darkgreen).stringColor_(Color.black).align_(\center);
+		self.fxsel.string_("FX");
+		self.fxsel.font = Font("Monaco",10);
+		self.fxsel.mouseDownAction={
+			arg view,x,y,modifiers,buttonNumber,clickCount;
+			NotificationCenter.notify(\gui,\gui_sel,2);
+		};
 
 		self.parampanel=CompositeView.new(self.win,Rect(30,400,1000,550));
 		self.parampanel.decorator=FlowLayout(self.parampanel.bounds);
@@ -86,7 +112,7 @@
 			if (( l_name != nil ), {
 				l_bar=self.m_hbar_proto().copy;
 				l_ccname=self.mappings.m_get_param(l_name);
-				l_bar.addit(l_panel2,Rect(0,0,88,20),l_ccname,self.orange);
+				l_bar.addit(l_panel2,Rect(0,0,88,20),l_ccname,self.orange,\control_change);
 				l_bar.updateit(0.5); 
 			});
 			self.params.put(l_name,[ l_text,l_bar ]);
@@ -105,7 +131,7 @@
 			arg i;
 			var l_controller,l_name,l_text,l_item;
 
-			l_panel2=CompositeView.new(self.mixerpanel,Rect(0,0,120,150)).background_(self.khaki);
+			l_panel2=CompositeView.new(self.mixerpanel,Rect(0,0,120,150)).background_(self.darkblue);
 			l_panel2.decorator=FlowLayout(l_panel2.bounds);
 			l_item=StaticText.new(l_panel2,110@20 ).background_(Color.gray(0.1)).stringColor_(Color.white).align_(\center);
 			l_item.font = Font("Monaco",10);
@@ -114,7 +140,7 @@
 			l_text.string_("64");
 			l_text.font = Font("Monaco",10);
 			l_item=self.m_hbar_proto().copy;
-			l_item.addit(l_panel2,Rect(0,0,88,20),"",self.orange);
+			l_item.addit(l_panel2,Rect(0,0,88,20),"%".format(i),self.orange,\level_change);
 			l_item.updateit(1.0); 
 			self.mixer_levels = self.mixer_levels.add([l_text,l_item]);
 
@@ -125,7 +151,7 @@
 			l_text=StaticText.new(l_panel2,20@20 ).background_(Color.gray(0.5)).stringColor_(Color.black).align_(\center);
 			l_text.string_("64");
 			l_item=self.m_hbar_proto().copy;
-			l_item.addit(l_panel2,Rect(0,0,88,20),"",self.orange);
+			l_item.addit(l_panel2,Rect(0,0,88,20),"%".format(i),self.orange,\pan_change);
 			l_item.updateit(0.5); 
 			self.mixer_pans = self.mixer_pans.add([l_text,l_item]);
 
@@ -136,7 +162,7 @@
 			l_text=StaticText.new(l_panel2,20@20 ).background_(Color.gray(0.5)).stringColor_(Color.black).align_(\center);
 			l_text.string_("0");
 			l_item=self.m_hbar_proto().copy;
-			l_item.addit(l_panel2,Rect(0,0,88,20),"",self.orange);
+			l_item.addit(l_panel2,Rect(0,0,88,20),"%".format(i),self.orange,\aux_change);
 			l_item.updateit(0.0); 
 			self.mixer_auxs = self.mixer_auxs.add([l_text,l_item]);
 		};
@@ -159,7 +185,7 @@
 			l_name=l_controller[\name];
 
 			if ((l_counter == 0 ), {
-				l_panel2=CompositeView.new(self.fxpanel,Rect(0,0,120,150)).background_(self.khaki);
+				l_panel2=CompositeView.new(self.fxpanel,Rect(0,0,120,150)).background_(self.darkgreen);
 				l_panel2.decorator=FlowLayout(l_panel2.bounds);
 			});
 
@@ -175,7 +201,7 @@
 
 			if (( l_name != nil ), {
 				l_bar=self.m_hbar_proto().copy;
-				l_bar.addit(l_panel2,Rect(0,0,88,20),l_name,self.orange);
+				l_bar.addit(l_panel2,Rect(0,0,88,20),l_name,self.orange,\fx_change);
 				l_bar.updateit(0.5); 
 			});
 			self.fxparams.put(l_name,[ l_text,l_bar ]);
@@ -376,6 +402,7 @@
 	m_set_mode: {
 		arg self,mode;
 		self.mode=mode;
+		self.m_show_mixer();
 	},
 	//---------------------------------------------------------------------------------------------------------------------------------------------
 	// update the scene buttons ( active, in use, unused )
@@ -639,12 +666,14 @@
 			val:0.5,
 			color:self.orange,
 			ccname:"",
+			event:nil,
 			addit: {
 
-				arg self,parent,rect,ccname,color;
+				arg self,parent,rect,ccname,color,event;
 				var bar;
 			
 				self.ccname=ccname;
+				self.event=event;
 				// (1) create a UserView
 				bar = UserView(parent,rect) ;
 				bar.background_(Color.black);
@@ -669,7 +698,7 @@
 					var ccval,ccname;
 					if (( (x >= 0) && (x <= self.view.bounds.width) && (y >= 0) && (y <= self.view.bounds.height) ), {
 						ccval=x.linlin(0,self.view.bounds.width,0,127).floor;
-						NotificationCenter.notify(\gui,\control_change,Array.with(self.ccname,ccval));
+						NotificationCenter.notify(\gui,self.event,Array.with(self.ccname,ccval));
 					});
 				};
 				

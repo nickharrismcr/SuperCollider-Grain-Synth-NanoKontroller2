@@ -1,10 +1,12 @@
 // control mappings for jpverb reverb
 (
 	mappings:nil,
+	mappingsbyname:nil,
 	m_init: {
 		arg self;
 
 		self.mappings=Dictionary.new(80);
+		self.mappingsbyname=Dictionary.new(80);
 
 		self.mappings.put("KNOB_1",
 			(
@@ -293,6 +295,13 @@
 				func:nil
 		));
 
+		self.mappings.keysValuesDo {
+			arg k,v;
+			var mapping;
+			mapping=self.mappings.at(k);
+			self.mappingsbyname.put(mapping[\name],v);
+		};
+
 	},
 	m_clear_all_matches: {
 		arg self;
@@ -308,5 +317,9 @@
 	m_get: {
 		arg self,key;
 		self.mappings[key];
+	},
+	m_getbyname: {
+		arg self,key;
+		self.mappingsbyname[key];
 	}
 );

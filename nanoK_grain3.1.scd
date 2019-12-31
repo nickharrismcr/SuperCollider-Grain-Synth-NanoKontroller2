@@ -121,7 +121,6 @@ f_set_general_actions={
 				0,{ g_gui.m_set_mode(1); },
 				1,{ g_gui.m_set_mode(2); },
 				2,{ g_gui.m_set_mode(0); });
-			g_gui.m_show_mixer();
 		});
 		// synth mode
 		if (( g_gui.m_get_mode() == 0 ), {
@@ -190,7 +189,7 @@ f_set_general_actions={
 				num=name.split($_)[1].asInteger;
 				inst=~multi.m_get(num-1);
 				if ((inst!=nil),{
-					inst.m_setpan(val);
+					inst.m_setpan(val,false);
 				});
 			});
 			// set a mixer channel aux
@@ -198,7 +197,7 @@ f_set_general_actions={
 				num=name.split($_)[2].asInteger;
 				inst=~multi.m_get(num-1);
 				if ((inst!=nil),{
-					inst.m_setaux(val);
+					inst.m_setaux(val,false);
 				});
 			});
 			// mute instrument
@@ -259,6 +258,56 @@ f_set_general_actions={
 			~multi.m_new_instrument_clone();
 		});
 		~multi.m_set_instrument(instno);
+	});
+	NotificationCenter.register( \gui,\gui_sel,this,{
+		arg mode;
+		g_gui.m_set_mode(mode);
+	});
+	NotificationCenter.register( \gui,\level_change,this,{
+		arg num,val;
+		var inst;
+		inst=~multi.m_get(num.asInteger);
+		if ((inst!=nil),{
+			inst.m_setvol(val,true);
+		});
+	});
+	NotificationCenter.register( \gui,\pan_change,this,{
+		arg num,val;
+		var inst;
+		inst=~multi.m_get(num.asInteger);
+		if ((inst!=nil),{
+			inst.m_setpan(val,true);
+		});
+	});
+	NotificationCenter.register( \gui,\aux_change,this,{
+		arg num,val;
+		var inst;
+		inst=~multi.m_get(num.asInteger);
+		if ((inst!=nil),{
+			inst.m_setaux(val,true);
+		});
+	});
+	NotificationCenter.register(\gui,\fx_change,this,{
+		arg name,val;
+		var param,mapping;
+		if (( g_gui.m_get_mode() == 2 ), {
+			name.postln;
+			mapping=g_fx_mappings.m_getbyname(name);
+			mapping.postln;
+			if (( mapping != nil ), {
+				param=mapping[\name];
+				param.postln;
+				if (( mapping[\name] != nil ), {
+					if (( mapping[\name] == "disk play vol"),{
+						mapping.func(val,g_disk);
+					},{
+						mapping.func(val,~multi.fx);
+					});
+				});
+				NotificationCenter.notify(\fx,\cc_change,Array.with(param,val,mapping[\matched]));
+			});
+
+		});
 	});
 };
 
@@ -341,7 +390,7 @@ MIDIIn.connectAll;
 MIDIFunc.cc(f_midi_handler);
 
 g_recording = false;
-g_trace = true;
+g_trace = false;
 
 f={
 	f_set_general_actions.();
